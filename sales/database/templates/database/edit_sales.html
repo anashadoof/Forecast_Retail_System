@@ -1,0 +1,60 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block title %}Редактировать продажу{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center add-form-bg">
+    <div class="add-form-card px-5 py-5">
+        <h5 class="text-center mb-4 fw-semibold" style="font-size: 1.3rem;">Редактировать продажу</h5>
+        <form method="post" autocomplete="off" novalidate>
+            {% csrf_token %}
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Дата:</label>
+                <div class="col-8">{{ form.date }}</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Магазин:</label>
+                <div class="col-8">{{ form.store }}</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Товар:</label>
+                <div class="col-8">{{ form.product }}</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Промо-акция:</label>
+                <div class="col-8">{{ form.promo }}</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Количество:</label>
+                <div class="col-8">{{ form.sales }}</div>
+            </div>
+
+              {% if form.errors %}
+                  <div class="text-danger text-center mb-2">
+                      Пожалуйста, заполните все поля!
+                  </div>
+              {% endif %}
+
+
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <button type="submit" class="btn btn-dark"
+                style="border-radius: 16px; font-size: 1rem; padding: 7px 20px;">Сохранить</button>
+                <a href="{% url 'database_home' %}?tab=sales"  class="btn btn-light"
+                style="border-radius: 16px; font-size: 1rem; padding: 7px 20px;">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.only-letters').forEach(function(input) {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
+                value = value.replace(/^([a-zA-Zа-яА-ЯёЁ])/, s => s.toUpperCase());
+                e.target.value = value;
+            });
+        });
+    });
+</script>
+{% endblock %}

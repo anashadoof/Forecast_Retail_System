@@ -1,0 +1,410 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block title %}Таблицы данных{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div style="padding-top: 3rem; padding-bottom: 4.5rem; background-color: #121317">
+        <div class="d-flex justify-content-center mt-0">
+            <div class="bg-white shadow d-flex gap-2 justify-content-center"
+            style="border-radius: 20px; padding: 20px 40px; margin-top:30px; min-width: 0; box-sizing: border-box;">
+                <button class="btn btn-primary" style="border-radius: 16px"
+                        id="sales-btn" onclick="showTable('sales')">Продажи</button>
+                <button class="btn btn-primary" style="border-radius: 16px"
+                        id="stores-btn" onclick="showTable('stores')">Магазины</button>
+                <button class="btn btn-primary" style="border-radius: 16px"
+                        id="products-btn" onclick="showTable('products')">Товары</button>
+                <button class="btn btn-primary" style="border-radius: 16px"
+                        id="promo-btn" onclick="showTable('promo')">Промо</button>
+            </div>
+        </div>
+    </div>
+    <div class="data-section" style="background-color: #fff;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
+    margin-top: -28px;
+    position: relative;">
+    <div class="container py-5" style="min-height:300px;">
+
+        <!-- Магазины -->
+        <div id="storesBlock" style="display:none;">
+            <div class="mb-3 d-flex justify-content-center">
+                <input type="text" class="form-control" id="storeSearchInput"
+                       placeholder="Введите фильтры" autocomplete="off"
+                       style="max-width: 420px; margin-left: 8px;"
+                       onkeyup="filterTable('storesListTable', this.value)">
+            </div>
+            <div class="table-responsive mt-4">
+                <table id="storesListTable" class="table table-striped table-hover align-middle rounded-3 overflow-hidden">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th scope="col" onclick="sortTable('storesListTable', 0)" style="cursor:pointer"># <span id="sort-arrow-stores-0"></span></th>
+                            <th scope="col" onclick="sortTable('storesListTable', 1)" style="cursor:pointer">Код магазина <span id="sort-arrow-stores-1">▲</span></th>
+                            <th scope="col" onclick="sortTable('storesListTable', 2)" style="cursor:pointer">Наименование <span id="sort-arrow-stores-2"></span></th>
+                            <th scope="col" onclick="sortTable('storesListTable', 3)" style="cursor:pointer">Округ <span id="sort-arrow-stores-3"></span></th>
+                            <th scope="col" onclick="sortTable('storesListTable', 4)" style="cursor:pointer">Регион <span id="sort-arrow-stores-4"></span></th>
+                            <th scope="col" onclick="sortTable('storesListTable', 5)" style="cursor:pointer">Формат <span id="sort-arrow-stores-5"></span></th>
+                            <th scope="col" onclick="sortTable('storesListTable', 6)" style="cursor:pointer">Открыт <span id="sort-arrow-stores-6"></span></th>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <th scope="col"></th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        {% for store in stores %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ store.store_id }}</td>
+                            <td>{{ store.short_name }}</td>
+                            <td>{{ store.cluster }}</td>
+                            <td>{{ store.region }}</td>
+                            <td>{{ store.store_format }}</td>
+                            <td>{{ store.begin_date|date:"j E Y" }}</td>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <td>
+                                {% if store.store_id %}
+                                <a href="{% url 'edit_store' store.store_id %}" class="btn btn-link p-0 edit-btn" title="Редактировать">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="12" fill="#e5e5e5"/>
+                                        <path d="M16.7 7.3L10 14H9V13L15.7 6.3C15.8 6.2 15.9 6.2 16 6.3L16.7 7C16.8 7.1 16.8 7.2 16.7 7.3Z" fill="#111"/>
+                                        <path d="M8 15H10L16.3 8.7L14.3 6.7L8 13V15Z" stroke="#111" stroke-width="1"/>
+                                    </svg>
+                                </a>
+                                <form method="post" action="{% url 'delete_store' store.store_id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link p-0 delete-btn" title="Удалить">
+                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                            <circle cx="10" cy="10" r="10" fill="#e5e5e5"/>
+                                            <path d="M6 6l8 8M14 6l-8 8" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-muted text-center">Нет данных по магазинам</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if user.is_authenticated and user.is_superuser %}
+            <div class="d-flex justify-content-center mt-4">
+                <a href="{% url 'add_store' %}" class="btn btn-light"
+                   style="border-radius: 16px; font-size: 1.05rem; padding: 7px 20px;">
+                    Добавить
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Товары -->
+        <div id="productsBlock" style="display:none;">
+            <div class="mb-3 d-flex justify-content-center">
+                <input type="text" class="form-control" id="productSearchInput"
+                       placeholder="Введите фильтры" autocomplete="off"
+                       style="max-width: 420px; margin-left: 8px;"
+                       onkeyup="filterTable('productsListTable', this.value)">
+            </div>
+            <div class="table-responsive mt-4">
+                <table id="productsListTable" class="table table-striped table-hover align-middle rounded-3 overflow-hidden">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th scope="col" onclick="sortTable('productsListTable', 0)" style="cursor:pointer"># <span id="sort-arrow-products-0"></span></th>
+                            <th scope="col" onclick="sortTable('productsListTable', 1)" style="cursor:pointer">Код товара <span id="sort-arrow-products-1">▲</span></th>
+                            <th scope="col" onclick="sortTable('productsListTable', 2)" style="cursor:pointer">Категория <span id="sort-arrow-products-2"></span></th>
+                            <th scope="col" onclick="sortTable('productsListTable', 3)" style="cursor:pointer">Наименование <span id="sort-arrow-products-3"></span></th>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <th scope="col"></th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        {% for product in products %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ product.product_id }}</td>
+                            <td>{{ product.category }}</td>
+                            <td>{{ product.name }}</td>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <td>
+                                {% if product.product_id %}
+                                <a href="{% url 'edit_product' product.product_id %}" class="btn btn-link p-0 edit-btn" title="Редактировать">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="12" fill="#e5e5e5"/>
+                                        <path d="M16.7 7.3L10 14H9V13L15.7 6.3C15.8 6.2 15.9 6.2 16 6.3L16.7 7C16.8 7.1 16.8 7.2 16.7 7.3Z" fill="#111"/>
+                                        <path d="M8 15H10L16.3 8.7L14.3 6.7L8 13V15Z" stroke="#111" stroke-width="1"/>
+                                    </svg>
+                                </a>
+                                <form method="post" action="{% url 'delete_product' product.product_id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link p-0 delete-btn" title="Удалить">
+                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                            <circle cx="10" cy="10" r="10" fill="#e5e5e5"/>
+                                            <path d="M6 6l8 8M14 6l-8 8" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">Нет товаров</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if user.is_authenticated and user.is_superuser %}
+            <div class="d-flex justify-content-center mt-4">
+                <a href="{% url 'add_product' %}" class="btn btn-light"
+                   style="border-radius: 16px; font-size: 1.05rem; padding: 7px 20px;">
+                    Добавить
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Продажи -->
+        <div id="salesBlock" style="display:none;">
+            <div class="mb-3 d-flex justify-content-center">
+                <input type="text" class="form-control" id="salesSearchInput"
+                       placeholder="Введите фильтры" autocomplete="off"
+                       style="max-width: 420px; margin-left: 8px;"
+                       onkeyup="filterTable('salesListTable', this.value)">
+            </div>
+            <div class="table-responsive mt-4">
+                <table id="salesListTable" class="table table-striped table-hover align-middle rounded-3 overflow-hidden">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th scope="col" onclick="sortTable('salesListTable', 0)" style="cursor:pointer"># <span id="sort-arrow-sales-0"></span></th>
+                            <th scope="col" onclick="sortTable('salesListTable', 1)" style="cursor:pointer">Дата <span id="sort-arrow-sales-1">▲</span></th>
+                            <th scope="col" onclick="sortTable('salesListTable', 2)" style="cursor:pointer">Код магазина <span id="sort-arrow-sales-2"></span></th>
+                            <th scope="col" onclick="sortTable('salesListTable', 3)" style="cursor:pointer">Код товара <span id="sort-arrow-sales-3"></span></th>
+                            <th scope="col" onclick="sortTable('salesListTable', 4)" style="cursor:pointer">Код акции <span id="sort-arrow-sales-4"></span></th>
+                            <th scope="col" onclick="sortTable('salesListTable', 6)" style="cursor:pointer">Продажи <span id="sort-arrow-sales-6"></span></th>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <th scope="col"></th>
+                            {% endif %}
+
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        {% for sale in sales %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ sale.date|date:"j E Y" }}</td>
+                            <td>{{ sale.store.store_id }}</td>
+                            <td>{{ sale.product.product_id }}</td>
+                            <td>{{ sale.promo.promo_id }}</td>
+                            <td>{{ sale.sales }}</td>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <td>
+                                {% if sale.id %}
+                                <a href="{% url 'edit_sale' sale.id %}" class="btn btn-link p-0 edit-btn" title="Редактировать">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="12" fill="#e5e5e5"/>
+                                        <path d="M16.7 7.3L10 14H9V13L15.7 6.3C15.8 6.2 15.9 6.2 16 6.3L16.7 7C16.8 7.1 16.8 7.2 16.7 7.3Z" fill="#111"/>
+                                        <path d="M8 15H10L16.3 8.7L14.3 6.7L8 13V15Z" stroke="#111" stroke-width="1"/>
+                                    </svg>
+                                </a>
+                                <form method="post" action="{% url 'delete_sale' sale.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link p-0 delete-btn" title="Удалить">
+                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                            <circle cx="10" cy="10" r="10" fill="#e5e5e5"/>
+                                            <path d="M6 6l8 8M14 6l-8 8" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-muted text-center">Нет данных по продажам</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if user.is_authenticated and user.is_superuser %}
+            <div class="d-flex justify-content-center mt-4">
+                <a href="{% url 'add_sale' %}" class="btn btn-light"
+                   style="border-radius: 16px; font-size: 1.05rem; padding: 7px 20px;">
+                    Добавить
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+
+        <!-- Промо -->
+        <div id="promoBlock" style="display:none;">
+            <div class="mb-3 d-flex justify-content-center">
+                <input type="text" class="form-control" id="promoSearchInput"
+                       placeholder="Введите фильтры" autocomplete="off"
+                       style="max-width: 420px; margin-left: 8px;"
+                       onkeyup="filterTable('promoListTable', this.value)">
+            </div>
+            <div class="table-responsive mt-4">
+                <table id="promoListTable" class="table table-striped table-hover align-middle rounded-3 overflow-hidden">
+                    <thead class="table-light text-center">
+                        <tr>
+                            <th scope="col" onclick="sortTable('promoListTable', 0)" style="cursor:pointer"># <span id="sort-arrow-promo-0"></span></th>
+                            <th scope="col" onclick="sortTable('promoListTable', 1)" style="cursor:pointer">Код акции <span id="sort-arrow-promo-1">▲</span></th>
+                            <th scope="col" onclick="sortTable('promoListTable', 2)" style="cursor:pointer">Тип акции <span id="sort-arrow-promo-2"></span></th>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <th scope="col"></th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        {% for promo in promos %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ promo.promo_id }}</td>
+                            <td>{{ promo.type }}</td>
+                            {% if user.is_authenticated and user.is_superuser %}
+                            <td>
+                                {% if promo.promo_id %}
+                                <a href="{% url 'edit_promo' promo.promo_id %}" class="btn btn-link p-0 edit-btn" title="Редактировать">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="12" fill="#e5e5e5"/>
+                                        <path d="M16.7 7.3L10 14H9V13L15.7 6.3C15.8 6.2 15.9 6.2 16 6.3L16.7 7C16.8 7.1 16.8 7.2 16.7 7.3Z" fill="#111"/>
+                                        <path d="M8 15H10L16.3 8.7L14.3 6.7L8 13V15Z" stroke="#111" stroke-width="1"/>
+                                    </svg>
+                                </a>
+                                <form method="post" action="{% url 'delete_promo' promo.promo_id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-link p-0 delete-btn" title="Удалить">
+                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                            <circle cx="10" cy="10" r="10" fill="#e5e5e5"/>
+                                            <path d="M6 6l8 8M14 6l-8 8" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                             {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-muted text-center">Нет промо-акций</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if user.is_authenticated and user.is_superuser %}
+            <div class="d-flex justify-content-center mt-4">
+                <a href="{% url 'add_promo' %}" class="btn btn-light"
+                   style="border-radius: 16px; font-size: 1.05rem; padding: 7px 20px;">
+                    Добавить
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+</div>
+<footer class="footer border-top" style="color: #6c757d;">
+      <div class="container text-center py-3">
+        ВКР Журавлевой А.О. 2025
+      </div>
+</footer>
+
+<script>
+    // Фильтр
+    function filterTable(tableId, value) {
+        let filter = value.toLowerCase().trim();
+        let keywords = filter.split(/\s+/);
+        let table = document.getElementById(tableId);
+        let trs = table.getElementsByTagName('tr');
+        for (let i = 1; i < trs.length; i++) {
+            let row = trs[i];
+            if (!row.getElementsByTagName('td').length) continue;
+            let rowText = row.textContent.toLowerCase();
+            let match = keywords.every(word => rowText.includes(word));
+            row.style.display = match ? '' : 'none';
+        }
+    }
+
+    // Сортировка
+    let sortDir = {};
+    function sortTable(tableId, n) {
+        let table = document.getElementById(tableId);
+        let rows = Array.from(table.tBodies[0].rows);
+        let isNumeric = n === 0;
+        let sortKey = tableId + '-' + n;
+        sortDir[sortKey] = !sortDir[sortKey];
+        let ths = table.tHead.rows[0].cells;
+        for (let i = 0; i < ths.length; i++) {
+            let arrow = document.getElementById(`sort-arrow-${tableId.replace('ListTable','')}-${i}`);
+            if (arrow) arrow.textContent = '';
+        }
+        let thisArrow = document.getElementById(`sort-arrow-${tableId.replace('ListTable','')}-${n}`);
+        if (thisArrow) thisArrow.textContent = sortDir[sortKey] ? '▲' : '▼';
+        rows.sort((a, b) => {
+            let v1 = a.cells[n].textContent.trim();
+            let v2 = b.cells[n].textContent.trim();
+            if (isNumeric) {
+                v1 = parseInt(v1, 10); v2 = parseInt(v2, 10);
+                if (isNaN(v1)) v1 = 0;
+                if (isNaN(v2)) v2 = 0;
+            }
+            if (v1 < v2) return sortDir[sortKey] ? -1 : 1;
+            if (v1 > v2) return sortDir[sortKey] ? 1 : -1;
+            return 0;
+        });
+        if (n !== 0) {
+            rows.forEach((row, idx) => { row.cells[0].textContent = idx + 1; });
+        }
+        for (let row of rows) table.tBodies[0].appendChild(row);
+    }
+
+    // Логика показа блоков
+    function setActive(btnId) {
+        document.querySelectorAll('.btn.btn-primary').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(btnId).classList.add('active');
+    }
+
+    function showTable(type) {
+        document.getElementById('storesBlock').style.display = 'none';
+        document.getElementById('productsBlock').style.display = 'none';
+        document.getElementById('promoBlock').style.display = 'none';
+        document.getElementById('salesBlock').style.display = 'none';
+
+        setActive(type + '-btn');
+
+        if (type === 'stores') {
+            document.getElementById('storesBlock').style.display = 'block';
+            document.getElementById('mainContent').innerHTML = '';
+        } else if (type === 'products') {
+            document.getElementById('productsBlock').style.display = 'block';
+            document.getElementById('mainContent').innerHTML = '';
+        } else if (type === 'promo') {
+            document.getElementById('promoBlock').style.display = 'block';
+            document.getElementById('mainContent').innerHTML = '';
+        } else if (type === 'sales') {
+            document.getElementById('salesBlock').style.display = 'block';
+            document.getElementById('mainContent').innerHTML = '';
+        } else {
+            document.getElementById('mainContent').innerHTML = '';
+        }
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function(){
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab') || 'sales';
+        showTable(tab);
+        setActive(tab + '-btn');
+    });
+</script>
+{% endblock %}

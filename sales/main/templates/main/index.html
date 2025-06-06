@@ -1,0 +1,88 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content  %}
+    <div class="page-header">
+      <div class="page-header-text">
+        Веб-приложение<br>для планирования<br>закупок розничной сети
+      </div>
+      <img src="{% static 'main/img/main.svg' %}" alt="Изображение" class="page-header-img">
+    </div>
+
+    <section class="features-section py-5">
+      <div class="container">
+        <div class="row g-4">
+          <!-- Карточка 1 -->
+          <div class="col-md-4">
+            <a href="{% url 'database_home' %}" class="feature-link">
+              <div class="feature-card p-4 h-100">
+                <img src="{% static 'main/img/main_1.svg' %}" alt="Данные" class="img-fluid mb-3">
+                <h5 class="fw-bold">Данные</h5>
+                <p>Легко фильтруйте, сортируйте и экспортируйте таблицы с данными</p>
+              </div>
+            </a>
+          </div>
+          <!-- Карточка 2 -->
+          <div class="col-md-4">
+            <a href="{% url 'analytics' %}" class="feature-link">
+              <div class="feature-card p-4 h-100">
+                <img src="{% static 'main/img/main_2.svg' %}" alt="Аналитика" class="img-fluid mb-3">
+                <h5 class="fw-bold">Аналитика</h5>
+                <p>Получайте визуальные отчёты по ключевым показателям</p>
+              </div>
+            </a>
+          </div>
+          <!-- Карточка 3 -->
+          <div class="col-md-4">
+            <div class="feature-card p-4 h-100">
+              <img src="{% static 'main/img/main_3.svg' %}" alt="Прогноз" class="img-fluid mb-3">
+              <h5 class="fw-bold">Прогноз</h5>
+              <p>Анализируйте продажи и планируйте закупки с точностью до SKU и магазина</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div class="container my-5">
+      <h2 class="model-title mb-4">О модели прогнозирования</h2>
+      <div class="model-card d-flex align-items-center p-4">
+          <div class="flex-grow-1 pe-4">
+            <h4 class="fw-bold mb-2">Catboost</h4>
+            <p>Современная реализация градиентного бустинга, разработанная компанией Яндекс.
+                <br>Качество модели оценено с использованием метрики WAPE, которая составила 42.52%</p>
+          </div>
+
+          <div class="model-photo">
+            <img src="{% static 'main/img/model.svg' %}" alt="Фото модель">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container mb-3">
+      <h2 class="about-title mb-4">Об авторе</h2>
+
+      <div class="about-card d-flex align-items-center p-4">
+        <div class="flex-grow-1 pe-4">
+          <h4 class="fw-bold mb-2">Анастасия Журавлева</h4>
+          <p>Привет! Я разработала этот интерфейс для планирования закупок в розничной сети, чтобы анализ продаж стал простым, понятным и красивым. Надеюсь, он будет полезен в работе</p>
+        </div>
+
+        <div class="about-photo">
+          <img src="{% static 'main/img/author.svg' %}" alt="Фото автора">
+        </div>
+      </div>
+    </div>
+
+    </section>
+
+    <footer class="footer border-top" style="color: #6c757d;">
+      <div class="container text-center py-3">
+        ВКР Журавлевой А.О. 2025
+      </div>
+    </footer>
+
+
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block title %}Добавить товар{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center add-form-bg">
+    <div class="add-form-card px-5 py-5">
+        <h5 class="text-center mb-4 fw-semibold" style="font-size: 1.3rem;">Добавить товар</h5>
+        <form method="post" autocomplete="off" novalidate>
+            {% csrf_token %}
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Код товара:</label>
+                <div class="col-8">
+                    <input type="text" name="product_id" maxlength="50"
+                           class="form-field only-digits form-control"
+                           placeholder="Введите код товара"
+                           required
+                           value="{{ form.product_id.value|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Категория:</label>
+                <div class="col-8">
+                    <input type="text" name="category" maxlength="100"
+                           class="form-field only-letters form-control"
+                           placeholder="Введите категорию"
+                           required
+                           value="{{ form.category.value|default_if_none:'' }}">
+                </div>
+            </div>
+            <div class="row mb-4 align-items-center">
+                <label class="col-4 col-form-label text-start">Наименование:</label>
+                <div class="col-8">
+                    <input type="text" name="name" maxlength="100"
+                           class="form-field upper-case form-control"
+                           placeholder="Введите наименование"
+                           required
+                           value="{{ form.name.value|default_if_none:'' }}">
+                </div>
+            </div>
+
+            {% if form.errors %}
+                <div class="text-danger text-center mb-2">
+                    {% if form.product_id.errors %}
+                        {% for error in form.product_id.errors %}
+                            {% if "уже существует" in error %}
+                                Товар с таким кодом уже существует!
+                            {% else %}
+                                Пожалуйста, заполните все поля!
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Пожалуйста, заполните все поля!
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <button type="submit" class="btn btn-dark"
+                style="border-radius: 16px; font-size: 1rem; padding: 7px 20px;">Сохранить</button>
+                <a href="{% url 'database_home' %}?tab=products" class="btn btn-light"
+                style="border-radius: 16px; font-size: 1rem; padding: 7px 20px;">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+::placeholder {
+    color: #b3b3b3 !important;
+    opacity: 1;
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.only-digits').forEach(function(input) {
+            input.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/[^\d]/g, '');
+            });
+        });
+
+        document.querySelectorAll('.only-letters').forEach(function(input) {
+            input.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s]/g, '');
+                let value = e.target.value;
+                value = value.charAt(0).toUpperCase() + value.slice(1);
+                e.target.value = value;
+            });
+        });
+    });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.upper-case').forEach(function(input) {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value;
+                value = value.charAt(0).toUpperCase() + value.slice(1);
+                e.target.value = value;
+            });
+        });
+    });
+</script>
+{% endblock %}

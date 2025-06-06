@@ -1,0 +1,70 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block title %}Добавить промо-акцию{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center add-form-bg">
+    <div class="add-form-card px-5 py-5">
+        <h5 class="text-center mb-4 fw-semibold" style="font-size: 1.3rem;">Добавить промо-акцию</h5>
+        <form method="post" autocomplete="off" novalidate>
+            {% csrf_token %}
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Код акции:</label>
+                <div class="col-8">{{ form.promo_id }}</div>
+            </div>
+            <div class="row mb-3 align-items-center">
+                <label class="col-4 col-form-label text-start">Тип акции:</label>
+                <div class="col-8">{{ form.type }}</div>
+            </div>
+
+            {% if form.errors %}
+                <div class="text-danger text-center mb-2">
+                    {% if form.promo_id.errors %}
+                        {% for error in form.promo_id.errors %}
+                            {% if "уже существует" in error %}
+                                Промо-акция с таким кодом уже существует!
+                            {% else %}
+                                Пожалуйста, заполните все поля!
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Пожалуйста, заполните все поля!
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <button type="submit" class="btn btn-dark"
+                style="border-radius: 16px; font-size: 1rem; padding: 7px 20px;">Сохранить</button>
+                <a href="{% url 'database_home' %}?tab=promo" class="btn btn-light"
+                style="border-radius: 16px; font-size: 1rem; padding: 7px 20px;">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+::placeholder {
+    color: #b3b3b3 !important;
+    opacity: 1;
+}
+</style>
+
+<script>
+    // Только цифры
+    document.querySelectorAll('.only-digits').forEach(function (input) {
+        input.addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    });
+
+    document.querySelectorAll('.upper-case').forEach(function (input) {
+        input.addEventListener('input', function (e) {
+            let value = e.target.value;
+            value = value.charAt(0).toUpperCase() + value.slice(1);
+            e.target.value = value;
+        });
+    });
+</script>
+{% endblock %}

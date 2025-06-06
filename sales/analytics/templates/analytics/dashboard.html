@@ -1,0 +1,213 @@
+{% extends 'main/layout.html' %}
+{% load static %}
+
+{% block title %}Аналитика{% endblock %}
+
+{% block content %}
+<style>
+select#chartTypeSelect.custom-select-toggle {
+    display: block;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    width: 340px;
+    background: #fff !important;
+    border: none !important;
+    border-radius: 14px !important;
+    font-size: 1.12rem !important;
+    color: #222 !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image:
+        url("data:image/svg+xml;utf8,<svg fill='gray' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z'/></svg>");
+    background-repeat: no-repeat !important;
+    background-position: right 1rem center !important;
+    background-size: 24px 24px !important;
+    text-align: center;
+}
+body {
+    background: #121317;
+}
+.filters-card {
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    height: 100%;
+    padding: 2.2rem 1.2rem;
+    /* всегда паддинг по бокам, чтобы фон не пропадал */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filters-card form {
+    max-width: 220px;
+    width: 100%;
+}
+
+/* Поля и кнопка */
+.filters-card .form-control,
+.filters-card button[type="submit"] {
+    max-width: 220px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* На мобильных — ширина формы и элементов до краёв карточки, но карточка всегда с белым фоном и скруглением! */
+@media (max-width: 767.98px) {
+    .filters-card {
+        padding: 1.2rem 0.4rem;
+        border-radius: 18px;
+    }
+    .filters-card form,
+    .filters-card .form-control,
+    .filters-card button[type="submit"] {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+</style>
+<div class="container" style="margin-top: 80px;">
+
+    <div class="text-center mb-4" style="margin-top: 60px;">
+        <select id="chartTypeSelect" class="custom-select-toggle">
+            <option value="" disabled selected>Выбрать график</option>
+            <option value="sales_distribution">Продажи по периоду</option>
+            <option value="monthly_sales">Продажи по месяцам</option>
+            <option value="weekday_sales">Продажи по дням недели</option>
+            <option value="top_products">ТОП-3 товаров по продажам</option>
+        </select>
+    </div>
+
+    <div class="row g-4 align-items-stretch">
+    <!-- Filters block -->
+    <div class="col-md-3">
+        <div class="filters-card d-flex flex-column justify-content-center align-items-center h-100">
+            <form id="filtersForm" class="mx-auto w-100" style="max-width: 220px;">
+                <div class="mb-3 filter-block" data-chart="sales_distribution top_products">
+                    <label class="form-label">Период:</label>
+                    <input type="date" name="date_from" class="form-control mb-1">
+                    <input type="date" name="date_to" class="form-control mb-1">
+                </div>
+                <div class="mb-3 filter-block" data-chart="sales_distribution top_products monthly_sales weekday_sales">
+                    <label class="form-label">Магазин:</label>
+                    <select name="store_id" class="form-control" id="storeSelect">
+                        <option value="all" id="allStoresOption">Все</option>
+                        {% for s in stores %}
+                        <option value="{{ s.store_id }}">{{ s.short_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3 filter-block" data-chart="sales_distribution monthly_sales weekday_sales">
+                    <label class="form-label">Товар:</label>
+                    <select name="product_id" class="form-control">
+                        <option value="all">Все</option>
+                        {% for p in products %}
+                        <option value="{{ p.product_id }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2" style="border-radius: 12px; width:100%;">Построить</button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="card p-4 shadow" style="border-radius:18px;">
+            <div id="chartDiv" style="min-height:380px;"></div>
+            <div id="infoDiv" class="mt-2" style="font-size:1rem;"></div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+function updateFilterVisibility() {
+    const chart = document.getElementById('chartTypeSelect').value;
+    document.querySelectorAll('.filter-block').forEach(function(block) {
+        const charts = block.getAttribute('data-chart');
+        const shouldBeVisible = charts.includes(chart);
+        block.style.display = shouldBeVisible ? '' : 'none';
+
+        if (!shouldBeVisible) {
+            block.querySelectorAll('input, select').forEach(function(el) {
+                if (el.tagName === 'SELECT') {
+                    // Если есть опция "all", выбираем её; иначе — первый элемент
+                    const allOption = Array.from(el.options).find(opt => opt.value === 'all');
+                    el.value = allOption ? 'all' : el.options[0].value;
+                } else if (el.type === 'date' || el.type === 'text') {
+                    el.value = '';
+                }
+            });
+        }
+    });
+}
+
+updateFilterVisibility();
+document.getElementById('chartTypeSelect').onchange = updateFilterVisibility;
+
+// Очищаем график и инфо при смене типа графика
+document.getElementById('chartTypeSelect').addEventListener('change', function() {
+    document.getElementById('chartDiv').innerHTML = '';
+    document.getElementById('infoDiv').innerHTML = '';
+});
+
+document.getElementById('chartTypeSelect').addEventListener('change', function() {
+    // Очищаем график и инфо
+    document.getElementById('chartDiv').innerHTML = '';
+    document.getElementById('infoDiv').innerHTML = '';
+
+    // Сброс всех фильтров
+    const form = document.getElementById('filtersForm');
+    form.reset();  // Сброс всех значений формы
+
+    // Сброс фильтров, которые управляются скриптом
+    document.querySelectorAll('.filter-block').forEach(function(block) {
+        block.querySelectorAll('input, select').forEach(function(el) {
+            if (el.tagName === 'SELECT') {
+                const allOption = Array.from(el.options).find(opt => opt.value === 'all');
+                el.value = allOption ? 'all' : el.options[0].value;
+            } else if (el.type === 'date') {
+                el.value = ''; // Очищаем дату
+            }
+        });
+    });
+
+    // Дополнительная логика для управления видимостью и значениями опций в зависимости от выбранного графика
+    updateFilterVisibility();
+});
+
+
+function fetchChart() {
+    // Очищаем всё
+    document.getElementById('chartDiv').innerHTML = '';
+    document.getElementById('infoDiv').innerHTML = '';
+
+    const form = document.getElementById('filtersForm');
+    const params = new URLSearchParams(new FormData(form));
+    params.append('chart_type', document.getElementById('chartTypeSelect').value);
+
+    fetch('/analytics/api/get_chart/?' + params.toString())
+        .then(r => r.json())
+        .then(data => {
+            if (data.status !== 'ok') {
+                document.getElementById('chartDiv').innerHTML = '<div class="alert alert-primary">'+data.msg+'</div>';
+                document.getElementById('infoDiv').innerHTML = '';
+            } else {
+                Plotly.purge('chartDiv');
+                Plotly.newPlot('chartDiv', [data.plot], data.layout || {});
+                document.getElementById('infoDiv').innerHTML = data.info || '';
+            }
+        });
+}
+
+document.getElementById('filtersForm').onsubmit = function(e){
+    e.preventDefault();
+    fetchChart();
+};
+
+</script>
+{% endblock %}
